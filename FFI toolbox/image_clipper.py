@@ -124,7 +124,8 @@ def displayImageAdj(screen, px, topleft, bottomright, prior, grid_on):
 
 def setup(path):
     px = pygame.image.load(path)
-    screen = pygame.display.set_mode( px.get_rect()[2:] )
+    #screen = pygame.display.set_mode( px.get_rect()[2:] )
+    screen = pygame.display.set_mode(px.get_rect()[2:], pygame.FULLSCREEN)
     screen.blit(px, px.get_rect())
     pygame.display.flip()
     return screen, px
@@ -185,42 +186,32 @@ def mainLoop(screen, px):
                 elif event.key == pygame.K_SPACE:
                     n = 1
 
-            elif topleft and bottomright:
-                keys = pygame.key.get_pressed()
-                if keys[pygame.K_w]:
-                    topleft = move(screen, topleft, 'up')
-                if keys[pygame.K_a]:
-                    topleft = move(screen, topleft, 'left')
-                if keys[pygame.K_d]:
-                    topleft = move(screen, topleft, 'right')
-                if keys[pygame.K_s]:
-                    topleft = move(screen, topleft, 'down')
-                if keys[pygame.K_UP]:
-                    bottomright = move(screen, bottomright, 'up')
-                if keys[pygame.K_LEFT]:
-                    bottomright = move(screen, bottomright, 'left')
-                if keys[pygame.K_RIGHT]:
-                    bottomright = move(screen, bottomright, 'right')
-                if keys[pygame.K_DOWN]:
-                    bottomright = move(screen, bottomright, 'down')
+                elif topleft and bottomright:
+                    if event.key == pygame.K_w:
+                        topleft = move(screen, topleft, 'up')
+                    if event.key == pygame.K_a:
+                        topleft = move(screen, topleft, 'left')
+                    if event.key == pygame.K_d:
+                        topleft = move(screen, topleft, 'right')
+                    if event.key == pygame.K_s:
+                        topleft = move(screen, topleft, 'down')
+                    if event.key == pygame.K_UP:
+                        bottomright = move(screen, bottomright, 'up')
+                    if event.key == pygame.K_LEFT:
+                        bottomright = move(screen, bottomright, 'left')
+                    if event.key == pygame.K_RIGHT:
+                        bottomright = move(screen, bottomright, 'right')
+                    if event.key == pygame.K_DOWN:
+                        bottomright = move(screen, bottomright, 'down')
 
-                #if keys[pygame.K_b]:
-                #    obj_class = 'Background'
-                #    obj = create_object(obj_class, topleft, bottomright)
-                #    obj_list.append(obj)
-                #    topleft = bottomright = prior = None
-                #    screen.blit(px, px.get_rect())
-                #    pygame.display.flip()
-                #    print 'Saved a background!'
-
-                if keys[pygame.K_p]:
-                    obj_class = 'Person'
-                    obj = create_object(obj_class, topleft, bottomright)
-                    obj_list.append(obj)
-                    topleft = bottomright = prior = None
-                    screen.blit(px, px.get_rect())
-                    pygame.display.flip()
-                    print 'Saved a person!'
+                    if event.key == pygame.K_p:
+                        obj_class = 'Person'
+                        obj = create_object(obj_class, topleft, bottomright)
+                        obj_list.append(obj)
+                        topleft = bottomright = prior = None
+                        screen.blit(px, px.get_rect())
+                        pygame.display.flip()
+                        print 'Saved a person!'
 
         if topleft and bottomright:
             prior = displayImageAdj(screen, px, topleft, bottomright, prior, grid_on)
@@ -249,7 +240,7 @@ if __name__ == "__main__":
         if os.path.isdir(filename):
             continue
 
-        print 'Lets classify', filename
+        print 'Let\'s classify', filename
 
         screen, px = setup(os.path.join(path, filename))
 
