@@ -49,7 +49,6 @@ def int_to_col(number):
     }
 
     print number % len(switcher)
-    print 'lol'
     return switcher.get(number % len(switcher), "red")
 
 # Visualize detections for each class

@@ -16,7 +16,6 @@ def save_xml(doc, root, folder = XML_FOLDER):
 
     if not os.path.exists(path):
         os.makedirs(path)
-        print 'lol'
 
     filename = root.find('filename').text.split('.')[0] + '.xml'
 

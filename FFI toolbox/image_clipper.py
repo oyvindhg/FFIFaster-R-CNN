@@ -216,7 +216,6 @@ def mainLoop(screen, px):
                         screen.blit(px, px.get_rect())
                         pygame.display.flip()
                         print 'Saved a person!'
-                        print 'lol'
 
         if topleft and bottomright:
             prior = displayImageAdj(screen, px, topleft, bottomright, prior, grid_on)
