@@ -124,8 +124,8 @@ def displayImageAdj(screen, px, topleft, bottomright, prior, grid_on):
 
 def setup(path):
     px = pygame.image.load(path)
-    #screen = pygame.display.set_mode( px.get_rect()[2:] )
-    screen = pygame.display.set_mode(px.get_rect()[2:], pygame.FULLSCREEN)
+    screen = pygame.display.set_mode( px.get_rect()[2:], pygame.RESIZABLE)
+    #screen = pygame.display.set_mode(px.get_rect()[2:], pygame.FULLSCREEN)
     screen.blit(px, px.get_rect())
     pygame.display.flip()
     return screen, px
@@ -133,13 +133,17 @@ def setup(path):
 def move(screen, location, command):
     width, height = screen.get_size()
     if command == 'up' and location[1] > 0:
+        print 'up'
         return (location[0], location[1] - 1)
     if command == 'left' and location[0] > 0:
+        print 'left'
         return (location[0] - 1, location[1])
     if command == 'down' and location[1] < height - 1:
+        print 'down'
         return (location[0], location[1] + 1)
     if command == 'right' and location[0] < width - 1:
         return (location[0] + 1, location[1])
+    return (location[0], location[1])
 
 def create_object(name, topleft, bottomright):
 
