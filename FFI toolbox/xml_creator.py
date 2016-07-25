@@ -1,9 +1,16 @@
-from xml.etree.ElementTree import ElementTree, Element, SubElement, tostring
+from xml.etree.ElementTree import ElementTree, Element, SubElement
 import os
+from ImageObject import ImageObject
+
+#####################################VARIABLES#########################################
+
+#Name of the folder containing the XML files
+XML_FOLDER = 'Annotations'
 
 
+#######################################################################################
 
-def save_xml(doc, root, folder = 'saveDatXML'):
+def save_xml(doc, root, folder = XML_FOLDER):
 
     path = os.path.join(os.path.dirname(os.path.abspath(__file__)), folder)
 
@@ -12,14 +19,14 @@ def save_xml(doc, root, folder = 'saveDatXML'):
 
     filename = root.find('filename').text.split('.')[0] + '.xml'
 
-    print filename
+    print 'Saved', filename, 'successfully!'
 
     with open(os.path.join(path, filename), 'wb') as file_handle:
         doc.write(file_handle)
 
 
 
-def create_xml(folder_name, file_name, im_size, objects):
+def create_xml(folder_name, file_name, w, h, d, objects):
 
     root = Element('annotation')
     doc = ElementTree(root)
@@ -38,7 +45,7 @@ def create_xml(folder_name, file_name, im_size, objects):
     im = SubElement(source, 'image')
     im.text = 'flickr'
     fid_n = SubElement(source, 'flickrid')
-    fid_n.text = 341012865
+    fid_n.text = '341012865'
 
     own = SubElement(root, 'owner')
     fid_s = SubElement(own, 'flickrid')
@@ -48,40 +55,44 @@ def create_xml(folder_name, file_name, im_size, objects):
 
     size = SubElement(root, 'size')
     width = SubElement(size, 'width')
-    width.text = im_size[0]
+    width.text = str(w)
     height = SubElement(size, 'height')
-    height.text = im_size[1]
+    height.text = str(h)
     depth = SubElement(size, 'depth')
-    depth.text = im_size[2]
+    depth.text = str(d)
 
     seg = SubElement(root, 'segmented')
-    seg.text = 0
+    seg.text = '0'
 
     for elem in objects:
         obj = SubElement(root, 'object')
         name = SubElement(obj, 'name')
-        name.text = obj.getName()
+        name.text = elem.getName()
         pose = SubElement(obj, 'pose')
         pose.text = 'Left'
         truncated = SubElement(obj, 'truncated')
-        truncated.text = 1
+        truncated.text = '1'
         diff = SubElement(obj, 'difficult')
-        diff.text = 0
+        diff.text = '0'
         bounds = SubElement(obj, 'bndbox')
         xmin = SubElement(bounds, 'xmin')
-        xmin = obj.getXmin()
+        xmin.text = str(elem.getXmin())
         ymin = SubElement(bounds, 'ymin')
-        ymin = obj.getYmin()
+        ymin.text = str(elem.getYmin())
         xmax = SubElement(bounds, 'xmax')
-        xmax = obj.getXmax()
+        xmax.text = str(elem.getXmax())
         ymax = SubElement(bounds, 'ymax')
-        ymax = obj.getYmax()
-
+        ymax.text = str(elem.getYmax())
 
     save_xml(doc, root)
 
 
 
-
 if __name__ == '__main__':
-    create_xml('VOC2007', '000001.jpg')
+
+    obj = ImageObject('dog', 20, 30, 100, 120)
+    obj2 = ImageObject('person', 50, 60, 220, 180)
+
+    obj_list = [obj, obj2]
+
+    create_xml('VOC2007', '000001.jpg', 1920, 1080, 3, obj_list)
