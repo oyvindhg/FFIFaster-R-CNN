@@ -209,7 +209,7 @@ def mainLoop(screen, px):
                         bottomright = move(screen, bottomright, 'down')
 
                     if event.key == pygame.K_p:
-                        obj_class = 'Person'
+                        obj_class = 'person'
                         obj = create_object(obj_class, topleft, bottomright)
                         obj_list.append(obj)
                         topleft = bottomright = prior = None
