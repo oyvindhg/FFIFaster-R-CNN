@@ -17,3 +17,4 @@ class ImageObject():
         return self.Xmax
     def getYmax(self):
         return self.Ymax
+    print 'lol'
