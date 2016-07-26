@@ -179,7 +179,7 @@ def mainLoop(screen, px):
     esc = 0
     n=0
     obj_list = []
-    while n!=1:
+    while n != 1:
         for event in pygame.event.get():
 
 
@@ -200,9 +200,12 @@ def mainLoop(screen, px):
                     if bottomright == topleft:
                         topleft = bottomright = None
 
+            elif event.type == pygame.QUIT:
+                n = 1
+                esc = 1
+
             elif event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_ESCAPE:
-                    obj_list = []
                     n = 1
                     esc = 1
                 elif event.key == pygame.K_SPACE:
@@ -211,22 +214,22 @@ def mainLoop(screen, px):
                 elif topleft and bottomright:
                     if event.key == pygame.K_w:
                         topleft = move(screen, topleft, 'up')
-                    if event.key == pygame.K_a:
+                    elif event.key == pygame.K_a:
                         topleft = move(screen, topleft, 'left')
-                    if event.key == pygame.K_d:
+                    elif event.key == pygame.K_d:
                         topleft = move(screen, topleft, 'right')
-                    if event.key == pygame.K_s:
+                    elif event.key == pygame.K_s:
                         topleft = move(screen, topleft, 'down')
-                    if event.key == pygame.K_UP:
+                    elif event.key == pygame.K_UP:
                         bottomright = move(screen, bottomright, 'up')
-                    if event.key == pygame.K_LEFT:
+                    elif event.key == pygame.K_LEFT:
                         bottomright = move(screen, bottomright, 'left')
-                    if event.key == pygame.K_RIGHT:
+                    elif event.key == pygame.K_RIGHT:
                         bottomright = move(screen, bottomright, 'right')
-                    if event.key == pygame.K_DOWN:
+                    elif event.key == pygame.K_DOWN:
                         bottomright = move(screen, bottomright, 'down')
 
-                    if event.key == pygame.K_p:
+                    elif event.key == pygame.K_p:
                         topleft = tuple([int(i / resize_factor) for i in topleft])
                         bottomright = tuple([int(i / resize_factor) for i in bottomright])
 
