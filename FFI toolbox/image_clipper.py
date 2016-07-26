@@ -30,20 +30,26 @@ WINDOW_SIZE = (1200,800)
 
 #####################################################################################
 
+def fix_topleft_and_bottomright(topleft,bottomright):
+    """Makes sure that topleft is at the top left and bottomright is at the bottom right"""
+    tlx, tly = topleft
+    brx, bry = bottomright
+    topleft = (min(tlx, brx), min(tly, bry))
+    bottomright = (max(tlx, brx), max(tly, bry))
+
+    return topleft, bottomright
+
 #Find the highest possible resize factor for images to be contained within the window
 def calculate_resize_factor(image_size, container_size):
     xFactor = container_size[0] / float(image_size[0])
     yFactor = container_size[1] / float(image_size[1])
     return min(xFactor, yFactor)
 
+
 def make_rectangle(topleft, bottomright, edge_color, fill_color, alpha=255):
     """Returns a surface and a position. Takes a topleft, bottomright, edge color and fill color as tuples of RGB values and an alpha value."""
 
-    #Make sure that topleft is at the top left and bottomright is at the bottom right
-    tlx, tly = topleft
-    brx, bry = bottomright
-    topleft = (min(tlx,brx), min(tly,bry))
-    bottomright = (max(tlx,brx), max(tly,bry))
+    topleft, bottomright = fix_topleft_and_bottomright(topleft, bottomright)
 
     width = bottomright[0] - topleft[0]
     height = bottomright[1] - topleft[1]
@@ -72,89 +78,19 @@ def make_rectangle(topleft, bottomright, edge_color, fill_color, alpha=255):
 #         pygame.draw.line(screen, (128, 128, 128), [0, row], [width, row], 1)
 
 
-
-def display_temporary_rectangle(screen, px, topleft, prior, grid_on):
+def display_temporary_rectangle(screen, px, topleft, grid_on):
     """Makes the rectangle that is displayed while the left mouse button is still down."""
 
-    # ensure that the rect always has positive width, height
-    x, y = topleft
-    width = pygame.mouse.get_pos()[0] - topleft[0]
-    height = pygame.mouse.get_pos()[1] - topleft[1]
-    if width < 0:
-        x += width
-        width = abs(width)
-    if height < 0:
-        y += height
-        height = abs(height)
+    im, topleft = make_rectangle(topleft,pygame.mouse.get_pos(),(0,0,0),(250,250,120),60)
+    screen.blit(im, topleft)
 
-    # eliminate redundant drawing cycles (when mouse isn't moving)
-    current = x, y, width, height
-    if not (width and height):
-        return current
-    #if current == prior:
-        #return current
 
-    # draw transparent box and blit it onto canvas
-    #screen.blit(px, px.get_rect())
-    im = pygame.Surface((width, height))
-    im.fill((250, 250, 120))
-    pygame.draw.rect(im, (0, 0, 0), im.get_rect(), 1)
-    im.set_alpha(60)
-    screen.blit(im, (x, y))
-
-    #if grid_on:
-    #    draw_grid(screen)
-
-    basicfont = pygame.font.SysFont(None, 28)
-    text = basicfont.render('x: ' + str(pygame.mouse.get_pos()[0]) + ', y: ' + str(pygame.mouse.get_pos()[1]), True, (255, 0, 0), (255, 255, 255))
-    textrect = text.get_rect()
-    textrect.centerx = screen.get_rect().topleft[0] + 150
-    textrect.centery = screen.get_rect().topleft[1] + 40
-
-    screen.blit(text, textrect)
-
-    #pygame.display.flip()
-
-    # return current box extents
-    return (x, y, width, height)
-
-def display_current_rectangle(screen, px, topleft, bottomright, prior, grid_on):
+def display_current_rectangle(screen, px, topleft, bottomright, grid_on):
     """Makes the rectangle that shows the currently selected object when the mouse button is not pressed."""
 
-    x, y = topleft
+    im, topleft = make_rectangle(topleft,bottomright,(0,0,0),(250,250,120),60)
+    screen.blit(im, topleft)
 
-    width = bottomright[0] - topleft[0]
-    height = bottomright[1] - topleft[1]
-
-    if width < 0:
-        x += width
-        width = abs(width)
-    if height < 0:
-        y += height
-        height = abs(height)
-
-    # eliminate redundant drawing cycles
-    current = x, y, width, height
-    if not (width and height):
-        return current
-    #if current == prior:
-    #    return current
-
-    # draw transparent box and blit it onto canvas
-    #screen.blit(px, px.get_rect())
-    im = pygame.Surface((width, height))
-    im.fill((250, 250, 120))
-    pygame.draw.rect(im, (0, 0, 0), im.get_rect(), 1)
-    im.set_alpha(60)
-    screen.blit(im, (x, y))
-
-    #if grid_on:
-    #    draw_grid(screen)
-
-    #pygame.display.flip()
-
-    # return current box extents
-    return (x, y, width, height)
 
 def setup(path):
     px = pygame.image.load(path)
@@ -198,7 +134,7 @@ def create_object(name, topleft, bottomright):
 
 def mainLoop(screen, px):
     grid_on = False
-    topleft = bottomright = prior = None
+    topleft = bottomright = None
     esc = 0
     n=0
     obj_list = []
@@ -206,7 +142,6 @@ def mainLoop(screen, px):
 
     while n != 1:
         for event in pygame.event.get():
-
 
             if event.type == pygame.MOUSEBUTTONDOWN:
                 if event.button == 1:
@@ -258,6 +193,8 @@ def mainLoop(screen, px):
                         #Reset screen
                         screen.blit(px, px.get_rect())
 
+                        topleft,bottomright=fix_topleft_and_bottomright(topleft,bottomright)
+
                         #Make a permanent rectangle
                         obj_rect, topleft = make_rectangle(topleft,bottomright,(0,0,0),(255,255,255),30)
                         obj_rect_list.append((obj_rect, topleft))
@@ -268,25 +205,30 @@ def mainLoop(screen, px):
                         obj_class = 'person'
                         obj = create_object(obj_class, topleft, bottomright)
                         obj_list.append(obj)
-                        topleft = bottomright = prior = None
-
-                        #pygame.display.flip()
-                        print 'Saved a person!'
+                        print 'Saved a person!', topleft, bottomright
+                        topleft = bottomright = None
 
 
         #Draw the screen
 
+        #Draw image
         screen.blit(px, px.get_rect())
 
-        if topleft and bottomright:
-            prior = display_current_rectangle(screen, px, topleft, bottomright, prior, grid_on)
-        elif topleft:
-            prior = display_temporary_rectangle(screen, px, topleft, prior, grid_on)
+        #Draw current rectangle
+        new_bottomright = bottomright
+        if topleft and not bottomright:
+            new_bottomright = pygame.mouse.get_pos()
+        if topleft:
+            new_topleft, new_bottomright = fix_topleft_and_bottomright(topleft, new_bottomright)
+            im, new_topleft = make_rectangle(new_topleft, new_bottomright, (0, 0, 0), (250, 250, 120), 60)
+            screen.blit(im, new_topleft)
+            #print(topleft, bottomright)
 
-        #Draw previous findings
+        #Draw previous rectangles
         for obj_rect_tuple in obj_rect_list:
             screen.blit(obj_rect_tuple[0], obj_rect_tuple[1])
 
+        #Update screen
         pygame.display.flip()
 
     return obj_list, esc
