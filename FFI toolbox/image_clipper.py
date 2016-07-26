@@ -1,3 +1,6 @@
+#!/usr/bin/python
+# -*- coding: utf-8 -*-
+
 import pygame, sys
 import os
 from PIL import Image
@@ -21,7 +24,16 @@ FOLDER = 'Images'
 #IMAGE = 'index.jpeg'
 IMAGE = 'all'
 
+#Size of the window. This variable will change if the user resizes the window.
+WINDOW_SIZE = (1200,800)
+
 #####################################################################################
+
+#Find the highest possible resize factor for images to be contained within the window
+def calculate_resize_factor(image_size, container_size):
+    xFactor = container_size[0] / float(image_size[0])
+    yFactor = container_size[1] / float(image_size[1])
+    return min(xFactor, yFactor)
 
 # Draw the grid
 def draw_grid(screen):
@@ -121,14 +133,20 @@ def displayImageAdj(screen, px, topleft, bottomright, prior, grid_on):
     # return current box extents
     return (x, y, width, height)
 
-
 def setup(path):
     px = pygame.image.load(path)
-    screen = pygame.display.set_mode( px.get_rect()[2:], pygame.RESIZABLE)
-    #screen = pygame.display.set_mode(px.get_rect()[2:], pygame.FULLSCREEN)
+
+    #Tilpasse størrelsen på bildet til størrelsen på vinduet
+    px_orig_size = px.get_rect()[2:]
+    print(px_orig_size)
+    factor = calculate_resize_factor(px_orig_size,WINDOW_SIZE)
+    px_size = tuple([int(i*factor) for i in px_orig_size])
+    px = pygame.transform.scale(px, px_size)
+
+    screen = pygame.display.set_mode((WINDOW_SIZE), pygame.RESIZABLE)
     screen.blit(px, px.get_rect())
     pygame.display.flip()
-    return screen, px
+    return screen, px, factor, px_orig_size
 
 def move(screen, location, command):
     width, height = screen.get_size()
@@ -209,6 +227,9 @@ def mainLoop(screen, px):
                         bottomright = move(screen, bottomright, 'down')
 
                     if event.key == pygame.K_p:
+                        topleft = tuple([int(i / resize_factor) for i in topleft])
+                        bottomright = tuple([int(i / resize_factor) for i in bottomright])
+
                         obj_class = 'person'
                         obj = create_object(obj_class, topleft, bottomright)
                         obj_list.append(obj)
@@ -216,6 +237,7 @@ def mainLoop(screen, px):
                         screen.blit(px, px.get_rect())
                         pygame.display.flip()
                         print 'Saved a person!'
+
 
         if topleft and bottomright:
             prior = displayImageAdj(screen, px, topleft, bottomright, prior, grid_on)
@@ -246,15 +268,16 @@ if __name__ == "__main__":
 
         print 'Let\'s classify', filename
 
-        screen, px = setup(os.path.join(path, filename))
+        screen, px, resize_factor, image_size = setup(os.path.join(path, filename))
 
         obj_list, esc = mainLoop(screen, px)
 
         if esc:
             break
 
-        width, height = screen.get_size()
-
+        width = image_size[0]
+        height = image_size[1]
+        FOLDER = "JPEGImages"
         create_xml(FOLDER, filename, width, height, 3, obj_list)
 
 
