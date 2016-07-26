@@ -99,7 +99,7 @@ def display_temporary_rectangle(screen, px, topleft, prior, grid_on):
     im = pygame.Surface((width, height))
     im.fill((250, 250, 120))
     pygame.draw.rect(im, (0, 0, 0), im.get_rect(), 1)
-    im.set_alpha(150)
+    im.set_alpha(60)
     screen.blit(im, (x, y))
 
     #if grid_on:
@@ -145,7 +145,7 @@ def display_current_rectangle(screen, px, topleft, bottomright, prior, grid_on):
     im = pygame.Surface((width, height))
     im.fill((250, 250, 120))
     pygame.draw.rect(im, (0, 0, 0), im.get_rect(), 1)
-    im.set_alpha(150)
+    im.set_alpha(60)
     screen.blit(im, (x, y))
 
     #if grid_on:
