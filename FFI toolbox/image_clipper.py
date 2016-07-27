@@ -7,6 +7,7 @@ import os
 from PIL import Image
 from ImageObject import ImageObject
 from xml_creator import create_xml
+import xml_creator
 import gtk
 
 pygame.init()
@@ -17,7 +18,7 @@ pygame.init()
 IMAGE_DEPTH = 3
 
 #Name of the folder of the images that are to be classified
-FOLDER = 'Images'
+IMAGE_FOLDER = 'Images'
 
 #The image you want to start classifying from. Write 'all' to classify all
 #IMAGE = 'index.jpeg'
@@ -41,6 +42,25 @@ def fix_topleft_and_bottomright(topleft,bottomright,pictureSize):
         bottomright = (min(bottomright[0],pictureSize[0]), min(bottomright[1],pictureSize[1]))
 
     return topleft, bottomright
+
+def read_old_xml(imagefilename, resizefactor):
+    image_name = "".join(imagefilename.split(".")[:-1])
+    objectlist = xml_creator.read_xml(image_name)
+
+    # Make permanent rectangles
+    obj_rect_list = []
+    for old in objectlist:
+        xmin = int(old.getXmin() * resizefactor)
+        xmax = int(old.getXmax() * resizefactor)
+        ymin = int(old.getYmin() * resizefactor)
+        ymax = int(old.getYmax() * resizefactor)
+        topleft = (xmin, ymin)
+        bottomright = (xmax, ymax)
+        obj_rect, topleft = make_rectangle(topleft, bottomright, (0, 0, 0), (255, 255, 255), 30)
+        obj_rect_list.append((obj_rect, topleft))
+
+    return obj_rect_list, objectlist
+
 
 def selection_from_points(list_of_points):
     x_values = []
@@ -115,13 +135,12 @@ def create_object(name, topleft, bottomright):
     return ImageObject(name, left, top, right, bottom)
 
 
-def mainLoop(screen, px, origSize):
+def mainLoop(screen, px, origSize, image_name, resizefactor):
     grid_on = False
     topleft = bottomright = None
     esc = 0
     n=0
-    obj_list = []
-    obj_rect_list = []
+    obj_rect_list, obj_list = read_old_xml(image_name, resizefactor)
     selected_points = [] #The (up to) four points that have been selected so far
     movement = 1 #1 to go to the next image after this one. -1 to go to the previous image after this one.
 
@@ -160,6 +179,12 @@ def mainLoop(screen, px, origSize):
                     print("Changed your mind?")
                     n = 1
                     movement = -1
+                elif event.key == pygame.K_DELETE:
+                    obj_rect_list = []
+                    obj_list = []
+                    print("Removed all selections.")
+                    n = 1
+                    movement = 0
 
                 elif topleft and bottomright:
                     if event.key == pygame.K_w:
@@ -227,12 +252,13 @@ def mainLoop(screen, px, origSize):
 
 if __name__ == "__main__":
 
-    path = os.path.join(os.path.dirname(os.path.abspath(__file__)), FOLDER)
+    path = os.path.join(os.path.dirname(os.path.abspath(__file__)), IMAGE_FOLDER)
 
     files = sorted(os.listdir(path))
 
     classify = False
 
+    #Finds the size of the monitor and adjusts the window accordingly.
     width = gtk.gdk.screen_width()
     height = gtk.gdk.screen_height()
     WINDOW_SIZE = (int(0.94*width), int(0.94*height))
@@ -260,7 +286,7 @@ if __name__ == "__main__":
 
         screen, px, resize_factor, image_size = setup(os.path.join(path, filename))
 
-        obj_list, esc, movement = mainLoop(screen, px, image_size)
+        obj_list, esc, movement = mainLoop(screen, px, image_size, filename, resize_factor)
 
         if esc:
             break

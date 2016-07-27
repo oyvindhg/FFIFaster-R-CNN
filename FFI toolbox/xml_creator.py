@@ -1,4 +1,5 @@
 from xml.etree.ElementTree import ElementTree, Element, SubElement
+import xml.etree.ElementTree as ET
 import os
 from ImageObject import ImageObject
 
@@ -19,11 +20,32 @@ def save_xml(doc, root, folder = XML_FOLDER):
 
     filename = root.find('filename').text.split('.')[0] + '.xml'
 
-    print 'Saved', filename, 'successfully!'
-
     with open(os.path.join(path, filename), 'wb') as file_handle:
         doc.write(file_handle)
 
+    print 'Saved', filename, 'successfully!'
+
+def read_xml(imagefilename, folder = XML_FOLDER):
+    path = os.path.join(os.path.dirname(os.path.abspath(__file__)), folder)
+
+    image_name = imagefilename.split('.')[0] + '.xml'
+
+    tree = ET.parse(os.path.join(path, image_name))
+    root = tree.getroot()
+    objects = []
+
+    for object in root.iter("object"):
+        name = object.find("name").text
+        bndbox = object.find("bndbox")
+        xmin = int(bndbox.find("xmin").text)
+        xmax = int(bndbox.find("xmax").text)
+        ymin = int(bndbox.find("ymin").text)
+        ymax = int(bndbox.find("ymax").text)
+
+        final_object = ImageObject(name, xmin, ymin, xmax, ymax)
+        objects.append(final_object)
+
+    return objects
 
 
 def create_xml(folder_name, file_name, w, h, d, objects):
