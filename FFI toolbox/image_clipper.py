@@ -12,9 +12,6 @@ pygame.init()
 
 ####################################VARIABLES########################################
 
-#The space between the grids if the user turns on grid view (right mouse click)
-GRID_SPACE = 30
-
 #Image depth as seen in the XML. Probably 3 for all color images
 IMAGE_DEPTH = 3
 
@@ -42,10 +39,14 @@ def fix_topleft_and_bottomright(topleft,bottomright,pictureSize):
 
     if pictureSize:
         #Makes sure that the selection is within the image
-        topleft = (max(topleft[0],0), max(topleft[1], 0))
+        topleft = (max(topleft[0],1), max(topleft[1], 1))
         bottomright = (min(bottomright[0],pictureSize[0]), min(bottomright[1],pictureSize[1]))
 
     return topleft, bottomright
+
+def selection_from_points(list_of_points):
+    x_values = y_values = []
+    #for
 
 #Find the highest possible resize factor for images to be contained within the window
 def calculate_resize_factor(image_size, container_size):
@@ -68,36 +69,6 @@ def make_rectangle(topleft, bottomright, edge_color, fill_color, alpha=255):
     rect.set_alpha(alpha)
 
     return rect, topleft
-
-
-# Draw the grid
-# def draw_grid(screen):
-#     width, height = screen.get_size()
-#
-#     for row in range(height):
-#         if row % GRID_SPACE != 0:
-#             continue
-#         for column in range(width):
-#             if column % GRID_SPACE != 0:
-#                 continue
-#
-#             pygame.draw.line(screen, (128, 128, 128), [column, 0], [column, height], 1)
-#
-#         pygame.draw.line(screen, (128, 128, 128), [0, row], [width, row], 1)
-
-
-def display_temporary_rectangle(screen, px, topleft, grid_on):
-    """Makes the rectangle that is displayed while the left mouse button is still down."""
-
-    im, topleft = make_rectangle(topleft,pygame.mouse.get_pos(),(0,0,0),(250,250,120),60)
-    screen.blit(im, topleft)
-
-
-def display_current_rectangle(screen, px, topleft, bottomright, grid_on):
-    """Makes the rectangle that shows the currently selected object when the mouse button is not pressed."""
-
-    im, topleft = make_rectangle(topleft,bottomright,(0,0,0),(250,250,120),60)
-    screen.blit(im, topleft)
 
 
 def setup(path):
@@ -146,6 +117,7 @@ def mainLoop(screen, px, origSize):
     n=0
     obj_list = []
     obj_rect_list = []
+    selected_points = [] #The (up to) four points that have been selected so far
 
     while n != 1:
         for event in pygame.event.get():
@@ -154,12 +126,10 @@ def mainLoop(screen, px, origSize):
                 if event.button == 1:
                     topleft = event.pos
                     bottomright = None
-                # elif event.button == 3:
-                #     grid_on = not grid_on
-                #     if topleft == None:
-                #         draw_grid(screen)
-                #         pygame.display.flip()
-
+                # if event.button == 3:
+                #     selected_points.append = event.pos
+                #     if len(selected_points) == 4:
+                #         topleft, bottomright = selection_from_points(selected_points)
 
             elif event.type == pygame.MOUSEBUTTONUP:
                 if event.button == 1:
@@ -197,8 +167,6 @@ def mainLoop(screen, px, origSize):
                         bottomright = move(screen, bottomright, 'down')
 
                     elif event.key == pygame.K_p:
-                        #Reset screen
-                        screen.blit(px, px.get_rect())
 
                         topleft,bottomright=fix_topleft_and_bottomright(topleft, bottomright, px.get_rect()[2:])
 
@@ -214,6 +182,7 @@ def mainLoop(screen, px, origSize):
                         obj_class = 'person'
                         obj = create_object(obj_class, topleft, bottomright)
                         obj_list.append(obj)
+
                         print 'Saved a person!', topleft, bottomright
                         topleft = bottomright = None
 
