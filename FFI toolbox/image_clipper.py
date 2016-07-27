@@ -125,20 +125,22 @@ def mainLoop(screen, px, origSize):
     obj_list = []
     obj_rect_list = []
     selected_points = [] #The (up to) four points that have been selected so far
+    movement = 1 #1 to go to the next image after this one. -1 to go to the previous image after this one.
 
     while n != 1:
         for event in pygame.event.get():
 
             if event.type == pygame.MOUSEBUTTONDOWN:
-                if event.button == 3:
-                    topleft = event.pos
-                    bottomright = None
                 if event.button == 1:
                     selected_points.append(event.pos)
                     if len(selected_points) == 4:
                         topleft, bottomright = selection_from_points(selected_points)
-                        print(topleft,bottomright)
+                        print(topleft, bottomright)
                         selected_points = []
+                if event.button == 3:
+                    selected_points = []
+                    topleft = event.pos
+                    bottomright = None
 
             elif event.type == pygame.MOUSEBUTTONUP:
                 if event.button == 3:
@@ -156,6 +158,10 @@ def mainLoop(screen, px, origSize):
                     esc = 1
                 elif event.key == pygame.K_SPACE:
                     n = 1
+                elif event.key == pygame.K_b:
+                    print("Changed your mind?")
+                    n = 1
+                    movement = -1
 
                 elif topleft and bottomright:
                     if event.key == pygame.K_w:
@@ -177,7 +183,7 @@ def mainLoop(screen, px, origSize):
 
                     elif event.key == pygame.K_p:
 
-                        topleft,bottomright=fix_topleft_and_bottomright(topleft, bottomright, px.get_rect()[2:])
+                        topleft, bottomright = fix_topleft_and_bottomright(topleft, bottomright, px.get_rect()[2:] )
 
                         #Make a permanent rectangle
                         obj_rect, topleft = make_rectangle(topleft,bottomright,(0,0,0),(255,255,255),30)
@@ -218,7 +224,7 @@ def mainLoop(screen, px, origSize):
         #Update screen
         pygame.display.flip()
 
-    return obj_list, esc
+    return obj_list, esc, movement
 
 
 if __name__ == "__main__":
@@ -229,7 +235,10 @@ if __name__ == "__main__":
 
     classify = False
 
-    for filename in files:
+    fileindex = 0
+    while fileindex < len(files):
+        fileindex = max(0, fileindex)
+        filename = files[fileindex]
 
         if IMAGE != 'all':
             if IMAGE == filename:
@@ -244,7 +253,7 @@ if __name__ == "__main__":
 
         screen, px, resize_factor, image_size = setup(os.path.join(path, filename))
 
-        obj_list, esc = mainLoop(screen, px, image_size)
+        obj_list, esc, movement = mainLoop(screen, px, image_size)
 
         if esc:
             break
@@ -254,7 +263,7 @@ if __name__ == "__main__":
         FOLDER = "JPEGImages"
         create_xml(FOLDER, filename, width, height, 3, obj_list)
 
-
+        fileindex += movement
 
     #im = Image.open(input_loc)
     #im = im.crop(( left, upper, right, lower))
