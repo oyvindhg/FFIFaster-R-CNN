@@ -244,9 +244,11 @@ if __name__ == "__main__":
             if IMAGE == filename:
                 classify = True
             elif classify == False :
+                fileindex += movement
                 continue
 
         if os.path.isdir(filename):
+            fileindex += movement
             continue
 
         print 'Let\'s classify', filename
