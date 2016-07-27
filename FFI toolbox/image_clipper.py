@@ -7,6 +7,7 @@ import os
 from PIL import Image
 from ImageObject import ImageObject
 from xml_creator import create_xml
+import gtk
 
 pygame.init()
 
@@ -21,9 +22,6 @@ FOLDER = 'Images'
 #The image you want to start classifying from. Write 'all' to classify all
 #IMAGE = 'index.jpeg'
 IMAGE = 'all'
-
-#Size of the window.
-WINDOW_SIZE = (1200,800)
 
 #####################################################################################
 
@@ -235,6 +233,10 @@ if __name__ == "__main__":
 
     classify = False
 
+    width = gtk.gdk.screen_width()
+    height = gtk.gdk.screen_height()
+    WINDOW_SIZE = (int(0.94*width), int(0.94*height))
+
     fileindex = 0
     movement = 1
     while fileindex < len(files):
@@ -246,6 +248,8 @@ if __name__ == "__main__":
                 classify = True
             elif classify == False :
                 fileindex += movement
+                if fileindex == len(files):
+                    print("No file called \"{}\"".format(IMAGE))
                 continue
 
         if os.path.isdir(filename):
