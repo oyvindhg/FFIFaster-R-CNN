@@ -45,8 +45,15 @@ def fix_topleft_and_bottomright(topleft,bottomright,pictureSize):
     return topleft, bottomright
 
 def selection_from_points(list_of_points):
-    x_values = y_values = []
-    #for
+    x_values = []
+    y_values = []
+    for point in list_of_points:
+        x_values.append(point[0])
+        y_values.append(point[1])
+
+    topleft = (min(x_values), min(y_values))
+    bottomright = (max(x_values), max(y_values))
+    return topleft, bottomright
 
 #Find the highest possible resize factor for images to be contained within the window
 def calculate_resize_factor(image_size, container_size):
@@ -123,16 +130,18 @@ def mainLoop(screen, px, origSize):
         for event in pygame.event.get():
 
             if event.type == pygame.MOUSEBUTTONDOWN:
-                if event.button == 1:
+                if event.button == 3:
                     topleft = event.pos
                     bottomright = None
-                # if event.button == 3:
-                #     selected_points.append = event.pos
-                #     if len(selected_points) == 4:
-                #         topleft, bottomright = selection_from_points(selected_points)
+                if event.button == 1:
+                    selected_points.append(event.pos)
+                    if len(selected_points) == 4:
+                        topleft, bottomright = selection_from_points(selected_points)
+                        print(topleft,bottomright)
+                        selected_points = []
 
             elif event.type == pygame.MOUSEBUTTONUP:
-                if event.button == 1:
+                if event.button == 3:
                     bottomright = event.pos
                     if bottomright == topleft:
                         topleft = bottomright = None
