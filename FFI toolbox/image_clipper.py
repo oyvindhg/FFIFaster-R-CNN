@@ -30,12 +30,20 @@ WINDOW_SIZE = (1200,800)
 
 #####################################################################################
 
-def fix_topleft_and_bottomright(topleft,bottomright):
-    """Makes sure that topleft is at the top left and bottomright is at the bottom right"""
+def fix_topleft_and_bottomright(topleft,bottomright,pictureSize):
+    """Makes sure that topleft and bottomright are valid.
+    Returns a valid topleft, bottomright."""
+
+    #Makes sure that topleft is at the top left and bottomright is at the bottom right
     tlx, tly = topleft
     brx, bry = bottomright
     topleft = (min(tlx, brx), min(tly, bry))
     bottomright = (max(tlx, brx), max(tly, bry))
+
+    if pictureSize:
+        #Makes sure that the selection is within the image
+        topleft = (max(topleft[0],0), max(topleft[1], 0))
+        bottomright = (min(bottomright[0],pictureSize[0]), min(bottomright[1],pictureSize[1]))
 
     return topleft, bottomright
 
@@ -49,7 +57,7 @@ def calculate_resize_factor(image_size, container_size):
 def make_rectangle(topleft, bottomright, edge_color, fill_color, alpha=255):
     """Returns a surface and a position. Takes a topleft, bottomright, edge color and fill color as tuples of RGB values and an alpha value."""
 
-    topleft, bottomright = fix_topleft_and_bottomright(topleft, bottomright)
+    topleft, bottomright = fix_topleft_and_bottomright(topleft,bottomright,None)
 
     width = bottomright[0] - topleft[0]
     height = bottomright[1] - topleft[1]
@@ -97,7 +105,6 @@ def setup(path):
 
     #Tilpasse størrelsen på bildet til størrelsen på vinduet
     px_orig_size = px.get_rect()[2:]
-    print(px_orig_size)
     factor = calculate_resize_factor(px_orig_size,WINDOW_SIZE)
     px_size = tuple([int(i*factor) for i in px_orig_size])
     px = pygame.transform.scale(px, px_size)
@@ -132,7 +139,7 @@ def create_object(name, topleft, bottomright):
     return ImageObject(name, left, top, right, bottom)
 
 
-def mainLoop(screen, px):
+def mainLoop(screen, px, origSize):
     grid_on = False
     topleft = bottomright = None
     esc = 0
@@ -193,7 +200,7 @@ def mainLoop(screen, px):
                         #Reset screen
                         screen.blit(px, px.get_rect())
 
-                        topleft,bottomright=fix_topleft_and_bottomright(topleft,bottomright)
+                        topleft,bottomright=fix_topleft_and_bottomright(topleft, bottomright, px.get_rect()[2:])
 
                         #Make a permanent rectangle
                         obj_rect, topleft = make_rectangle(topleft,bottomright,(0,0,0),(255,255,255),30)
@@ -201,6 +208,8 @@ def mainLoop(screen, px):
 
                         topleft = tuple([int(i / resize_factor) for i in topleft])
                         bottomright = tuple([int(i / resize_factor) for i in bottomright])
+
+                        topleft, bottomright = fix_topleft_and_bottomright(topleft, bottomright, (origSize[0]-1, origSize[1]-1))
 
                         obj_class = 'person'
                         obj = create_object(obj_class, topleft, bottomright)
@@ -219,7 +228,7 @@ def mainLoop(screen, px):
         if topleft and not bottomright:
             new_bottomright = pygame.mouse.get_pos()
         if topleft:
-            new_topleft, new_bottomright = fix_topleft_and_bottomright(topleft, new_bottomright)
+            new_topleft, new_bottomright = fix_topleft_and_bottomright(topleft, new_bottomright, px.get_rect()[2:])
             im, new_topleft = make_rectangle(new_topleft, new_bottomright, (0, 0, 0), (250, 250, 120), 60)
             screen.blit(im, new_topleft)
             #print(topleft, bottomright)
@@ -257,7 +266,7 @@ if __name__ == "__main__":
 
         screen, px, resize_factor, image_size = setup(os.path.join(path, filename))
 
-        obj_list, esc = mainLoop(screen, px)
+        obj_list, esc = mainLoop(screen, px, image_size)
 
         if esc:
             break
