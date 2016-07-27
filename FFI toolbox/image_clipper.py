@@ -236,6 +236,7 @@ if __name__ == "__main__":
     classify = False
 
     fileindex = 0
+    movement = 1
     while fileindex < len(files):
         fileindex = max(0, fileindex)
         filename = files[fileindex]
