@@ -141,8 +141,8 @@ def mainLoop(screen, px, origSize, image_name, resizefactor):
     esc = 0
     n=0
     obj_rect_list, obj_list = read_old_xml(image_name, resizefactor)
-    selected_points = [] #The (up to) four points that have been selected so far
-    movement = 1 #1 to go to the next image after this one. -1 to go to the previous image after this one.
+    selected_points = [] #The (up to) four marker points that have been selected so far
+    movement = 1 #1 to go to the next image after this one. -1 to go to the previous image after finishing this one.
 
     while n != 1:
         for event in pygame.event.get():
@@ -150,12 +150,12 @@ def mainLoop(screen, px, origSize, image_name, resizefactor):
             if event.type == pygame.MOUSEBUTTONDOWN:
                 if event.button == 1:
                     selected_points.append(event.pos)
+                    topleft, bottomright = selection_from_points(selected_points)
                     if len(selected_points) == 4:
-                        topleft, bottomright = selection_from_points(selected_points)
                         print(topleft, bottomright)
-                        selected_points = []
+                        selected_points = [] #Reset marker points
                 if event.button == 3:
-                    selected_points = []
+                    selected_points = [] #Reset marker points
                     topleft = event.pos
                     bottomright = None
 
