@@ -105,12 +105,24 @@ def vis_detections(class_name, cls_ind, dets, ax, thresh=0.5):
                 fontsize=14, color='snow')
 
 
-def demo(net, mappe, image_name):
+def detection(net, image_name, mappe=None):
     """Detect object classes in an image using pre-computed object proposals."""
 
-    # Load the demo image
-    im_file = os.path.join(mappe, image_name)
-    im = cv2.imread(im_file)
+    if str(type(image_name)).split("'")[1] == "str": #If image_name is the path to an image
+        # Load the demo image
+        print(mappe,image_name)
+        im_file = os.path.join(mappe, image_name)
+        print(os.path.isfile(im_file))
+        print(im_file,"")
+        im = cv2.imread(im_file)
+        print(type(im))
+        print(1)
+    elif str(type(image_name)) == "numpy.ndarray": #If image_name is already a numpy image
+        im = image_name
+        print(2)
+    #else: something is wrong with image_name
+
+
     # Detect all object classes and regress object bounds
     timer = Timer()
     timer.tic()
@@ -139,6 +151,8 @@ def demo(net, mappe, image_name):
     plt.axis('off')
     plt.tight_layout()
     plt.draw()
+
+
 def parse_args():
     """Parse input arguments."""
     parser = argparse.ArgumentParser(description='Faster R-CNN demo')
@@ -163,9 +177,18 @@ def parse_args():
 
     return args
 
-analyze_image
+
+def analyze_image(image, net=None):
+    if net == None:
+        net = caffe.Net(PROTOTXT, CAFFEMODEL, caffe.TEST)
+    detection(net, image)
+    return
 
 if __name__ == '__main__':
+
+    #analyze_image('/home/sommerstudent/testdata/demo_test/000001.jpg')
+    #exit()
+
     cfg.TEST.HAS_RPN = True  # Use RPN for proposals
 
     args = parse_args()
@@ -203,10 +226,9 @@ if __name__ == '__main__':
     im_names = os.listdir(args.image_directory)
     i = 0
     for im_name in im_names:
-        print(args.image_count,i)
         print '~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~'
         print 'Demo for {}'.format(os.path.join(args.image_directory, im_name))
-        demo(net, args.image_directory, im_name)
+        detection(net, im_name, args.image_directory)
         if i == args.image_count - 1:
             break
         i += 1
