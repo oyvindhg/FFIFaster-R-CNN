@@ -156,6 +156,8 @@ def parse_args():
                         default=PROTOTXT)
     parser.add_argument('--images', dest='image_directory', help='The path to the directory containing the image files to be analyzed. Defaults to the IMAGE_DIRECTORY variable set in demo.py',
                         default=IMAGE_DIRECTORY)
+    parser.add_argument('--imagecount', dest='image_count', help="Number of images to analyze. Use -1 to analyze all images in the specified folder. [-1]",
+                        default=-1, type=int)
 
     args = parser.parse_args()
 
@@ -193,16 +195,17 @@ if __name__ == '__main__':
         try:
             _, _= im_detect(net, im, None, BOX_DELTAS_SGS)
         except TypeError:
-            print("demo.py: You are using the wrong version of lib/fast_rcnn/test.py. It has been changed in order to receive a fourth argument which is either \"bbox_pred\" or \"bbox_pred_sgs\".")
+            print("demo.py: You are using an old version of lib/fast_rcnn/test.py. It has been changed in order to receive a fourth argument which is either \"bbox_pred\" or \"bbox_pred_sgs\".")
             exit()
 
     im_names = os.listdir(args.image_directory)
     i = 0
     for im_name in im_names:
+        print(args.image_count,i)
         print '~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~'
         print 'Demo for {}'.format(os.path.join(args.image_directory, im_name))
         demo(net, args.image_directory, im_name)
-        if i >= 60: # i >= n: Analyser kun n bilder
+        if i == args.image_count - 1:
             break
         i += 1
 
