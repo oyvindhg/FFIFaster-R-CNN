@@ -101,11 +101,11 @@ def setup(path):
 
     #Tilpasse størrelsen på bildet til størrelsen på vinduet
     px_orig_size = px.get_rect()[2:]
-    factor = calculate_resize_factor(px_orig_size,WINDOW_SIZE)
+    factor = calculate_resize_factor(px_orig_size, window_size)
     px_size = tuple([int(i*factor) for i in px_orig_size])
     px = pygame.transform.scale(px, px_size)
 
-    screen = pygame.display.set_mode((WINDOW_SIZE), pygame.RESIZABLE)
+    screen = pygame.display.set_mode((window_size), pygame.RESIZABLE)
     screen.blit(px, px.get_rect())
     pygame.display.flip()
     return screen, px, factor, px_orig_size
@@ -261,7 +261,7 @@ if __name__ == "__main__":
     #Finds the size of the monitor and adjusts the window accordingly.
     width = gtk.gdk.screen_width()
     height = gtk.gdk.screen_height()
-    WINDOW_SIZE = (int(0.94*width), int(0.94*height))
+    window_size = (int(0.94 * width), int(0.94 * height))
 
     fileindex = 0
     movement = 1
