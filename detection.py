@@ -105,20 +105,29 @@ def vis_detections(class_name, cls_ind, dets, ax, thresh=0.5):
                 fontsize=14, color='snow')
 
 
-def demo(net, mappe, image_name):
-    """Detect object classes in an image using pre-computed object proposals."""
+def get_im(image_file):
+    """Creates and returns a numpy image from a path. Returns the input if it is already a numpy image."""
 
-    # Load the demo image
-    im_file = os.path.join(mappe, image_name)
-    im = cv2.imread(im_file)
-    # Detect all object classes and regress object bounds
-    timer = Timer()
-    timer.tic()
-    scores, boxes = im_detect(net, im, None, BOX_DELTAS_SGS)
-    timer.toc()
-    print ('Detection took {:.3f}s for '
-           '{:d} object proposals').format(timer.total_time, boxes.shape[0])
+    if str(type(image_file)).split("'")[1] == "str":  # If image_file is the path to an image
+        #print("get_im: image_file is a string.")
+        # Load the demo image
+        image_file = image_file
+        if not os.path.isfile(image_file):
+            print("Could not find the file:", image_file)
+            exit()
+        im = cv2.imread(image_file)
+    elif str(type(image_file)).split("'")[1] == "numpy.ndarray":  # If image_file is already a numpy image
+        print("get_im: image_file is already a numpy image.")
+        im = image_file
+    else:
+        print("Something is wrong with image_name:", type(image_file))
+        exit()
 
+    return im
+
+
+def draw_result(im, scores, boxes, show=True):
+    im = get_im(im)
     fig, ax = plt.subplots(figsize=(12, 12))
     im = im[:, :, (2, 1, 0)]
     ax.imshow(im, aspect='equal')
@@ -139,6 +148,25 @@ def demo(net, mappe, image_name):
     plt.axis('off')
     plt.tight_layout()
     plt.draw()
+    if show:
+        plt.show()
+
+
+def detection(net, image_name):
+    """Detect object classes in an image using pre-computed object proposals."""
+
+    im = get_im(image_name)
+    # Detect all object classes and regress object bounds
+    timer = Timer()
+    timer.tic()
+    scores, boxes = im_detect(net, im, None, BOX_DELTAS_SGS)
+    timer.toc()
+    print ('Detection took {:.3f}s for '
+           '{:d} object proposals').format(timer.total_time, boxes.shape[0])
+
+    return scores, boxes
+
+
 def parse_args():
     """Parse input arguments."""
     parser = argparse.ArgumentParser(description='Faster R-CNN demo')
@@ -163,7 +191,22 @@ def parse_args():
 
     return args
 
+def analyze_image(image, net=None):
+    cfg.TEST.HAS_RPN = True  # Use RPN for proposals
+    if net == None:
+        net = caffe.Net(PROTOTXT, CAFFEMODEL, caffe.TEST)
+    im = get_im(image)
+    print("Detecting ...")
+    scores, boxes = detection(net, im)
+    print("Detected.")
+
+    return scores, boxes
+
 if __name__ == '__main__':
+
+    analyze_image('/home/sommerstudent/fvr-py-FFI/data/demo/left0355.jpg')
+    exit()
+
     cfg.TEST.HAS_RPN = True  # Use RPN for proposals
 
     args = parse_args()
@@ -201,10 +244,11 @@ if __name__ == '__main__':
     im_names = os.listdir(args.image_directory)
     i = 0
     for im_name in im_names:
-        print(args.image_count,i)
         print '~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~'
-        print 'Demo for {}'.format(os.path.join(args.image_directory, im_name))
-        demo(net, args.image_directory, im_name)
+        file_name = os.path.join(args.image_directory, im_name)
+        print 'Demo for {}'.format(file_name)
+        scores, boxes = detection(net, file_name)
+        draw_result(file_name, scores, boxes, False)
         if i == args.image_count - 1:
             break
         i += 1
