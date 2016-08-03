@@ -163,8 +163,6 @@ def parse_args():
 
     return args
 
-analyze_image
-
 if __name__ == '__main__':
     cfg.TEST.HAS_RPN = True  # Use RPN for proposals
 
