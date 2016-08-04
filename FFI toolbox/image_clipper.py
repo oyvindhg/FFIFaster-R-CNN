@@ -62,7 +62,7 @@ def read_old_xml(imagefilename, resizefactor):
         ymax = int(old.getYmax() * resizefactor)
         topleft = (xmin, ymin)
         bottomright = (xmax, ymax)
-        obj_rect, topleft = make_rectangle(topleft, bottomright, (0, 0, 0), (255, 255, 255), 30)
+        obj_rect, topleft = make_rectangle(topleft, bottomright, (0, 0, 0), (255, 255, 255), 50)
         obj_rect_list.append((obj_rect, topleft))
 
     return obj_rect_list, objectlist
@@ -224,7 +224,7 @@ def mainLoop(screen, px, origSize, image_name, resizefactor):
                         topleft, bottomright = fix_topleft_and_bottomright(topleft, bottomright, px.get_rect()[2:] )
 
                         #Make a permanent rectangle
-                        obj_rect, topleft = make_rectangle(topleft,bottomright,(0,0,0),(255,255,255),30)
+                        obj_rect, topleft = make_rectangle(topleft,bottomright,(0,0,0),(255,255,255),50)
                         obj_rect_list.append((obj_rect, topleft))
 
                         topleft = tuple([int(i / resize_factor) for i in topleft])
@@ -251,7 +251,7 @@ def mainLoop(screen, px, origSize, image_name, resizefactor):
             new_bottomright = pygame.mouse.get_pos()
         if topleft:
             new_topleft, new_bottomright = fix_topleft_and_bottomright(topleft, new_bottomright, px.get_rect()[2:])
-            im, new_topleft = make_rectangle(new_topleft, new_bottomright, (0, 0, 0), (250, 250, 120), 60)
+            im, new_topleft = make_rectangle(new_topleft, new_bottomright, (0, 0, 0), (204, 0, 0), 60) #Utah crimson
             screen.blit(im, new_topleft)
             #print(topleft, bottomright)
 
