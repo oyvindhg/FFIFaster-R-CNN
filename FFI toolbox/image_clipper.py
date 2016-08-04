@@ -238,6 +238,7 @@ def mainLoop(screen, px, origSize, image_name, resizefactor):
 
                         print 'Saved a person!', topleft, bottomright
                         topleft = bottomright = None
+                        selected_points = []
 
 
         #Draw the screen
