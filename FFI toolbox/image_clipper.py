@@ -8,7 +8,7 @@ from PIL import Image
 from ImageObject import ImageObject
 from xml_creator import create_xml
 import xml_creator
-import gtk
+import subprocess
 
 pygame.init()
 
@@ -274,9 +274,9 @@ if __name__ == "__main__":
     classify = False
 
     #Finds the size of the monitor and gives the window a reasonable size.
-    width = gtk.gdk.screen_width()
-    height = gtk.gdk.screen_height()
-    window_size = (int(0.94 * width), int(0.94 * height))
+    rawsize = subprocess.Popen('xrandr | grep "\*" | cut -d" " -f4', shell = True, stdout = subprocess.PIPE).communicate()[0]
+    rawsize = rawsize[:-1].split("x")
+    window_size = (int(0.94 * int(rawsize[0])), int(0.94 * int(rawsize[1])))
 
     fileindex = 0
     movement = 1
