@@ -224,7 +224,7 @@ def mainLoop(screen, px, origSize, image_name, resizefactor):
                         topleft, bottomright = fix_topleft_and_bottomright(topleft, bottomright, px.get_rect()[2:] )
 
                         #Make a permanent rectangle
-                        obj_rect, topleft = make_rectangle(topleft,bottomright,(0,0,0),(255,255,255),50)
+                        obj_rect, topleft = make_rectangle(topleft,bottomright,(0,0,0),(255,255,255), 50)
                         obj_rect_list.append((obj_rect, topleft))
 
                         topleft = tuple([int(i / resize_factor) for i in topleft])
@@ -280,7 +280,8 @@ if __name__ == "__main__":
 
     fileindex = 0
     movement = 1
-    while fileindex < len(files):
+    while True:
+        fileindex %= len(files)
         fileindex = max(0, fileindex)
         filename = files[fileindex]
 
@@ -296,11 +297,6 @@ if __name__ == "__main__":
         if os.path.isdir(os.path.join(path,filename)):
             print(filename, "is a directory")
             fileindex += movement
-            if fileindex <= 0:
-                if movement == 0:
-                    movement = 1
-                else:
-                    movement = -movement
             continue
 
         print 'Let\'s classify', filename
