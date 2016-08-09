@@ -8,7 +8,7 @@ from PIL import Image
 from ImageObject import ImageObject
 from xml_creator import create_xml
 import xml_creator
-import gtk
+import subprocess
 
 pygame.init()
 
@@ -17,8 +17,9 @@ pygame.init()
 #Image depth as seen in the XML. Probably 3 for all color images
 IMAGE_DEPTH = 3
 
-#Name of the folder of the images that are to be classified
-IMAGE_FOLDER = 'Images'
+#Name of the folder of the images that are to be classified, and the xml files that are to be created
+IMAGE_PATH = '/home/mathias/Dropbox/Testbilder 2016-08-03'
+XML_PATH = '/home/mathias/Dropbox/Testbilder 2016-08-03/XML'
 
 #The image you want to start classifying from. Write 'all' to classify all
 #IMAGE = 'index.jpeg'
@@ -45,7 +46,12 @@ def fix_topleft_and_bottomright(topleft,bottomright,pictureSize):
 
 def read_old_xml(imagefilename, resizefactor):
     image_name = "".join(imagefilename.split(".")[:-1])
-    objectlist = xml_creator.read_xml(image_name)
+    objectlist = xml_creator.read_xml(image_name, XML_PATH)
+
+    if objectlist == None:
+        print("No existing xml file.")
+        return [], []
+    print("Found previous xml file.")
 
     # Make permanent rectangles
     obj_rect_list = []
@@ -56,10 +62,18 @@ def read_old_xml(imagefilename, resizefactor):
         ymax = int(old.getYmax() * resizefactor)
         topleft = (xmin, ymin)
         bottomright = (xmax, ymax)
-        obj_rect, topleft = make_rectangle(topleft, bottomright, (0, 0, 0), (255, 255, 255), 30)
+        obj_rect, topleft = make_rectangle(topleft, bottomright, (0, 0, 0), (255, 255, 255), 50)
         obj_rect_list.append((obj_rect, topleft))
 
     return obj_rect_list, objectlist
+
+
+def delete_xml(path, filename):
+    full_path = os.path.join( path, filename.split('.')[0] + '.xml' )
+    try:
+        os.remove(full_path)
+    except OSError:
+        print("No xml file to remove")
 
 
 def selection_from_points(list_of_points):
@@ -141,6 +155,7 @@ def mainLoop(screen, px, origSize, image_name, resizefactor):
     esc = 0
     n=0
     obj_rect_list, obj_list = read_old_xml(image_name, resizefactor)
+
     selected_points = [] #The (up to) four marker points that have been selected so far
     movement = 1 #1 to go to the next image after this one. -1 to go to the previous image after finishing this one.
 
@@ -209,7 +224,7 @@ def mainLoop(screen, px, origSize, image_name, resizefactor):
                         topleft, bottomright = fix_topleft_and_bottomright(topleft, bottomright, px.get_rect()[2:] )
 
                         #Make a permanent rectangle
-                        obj_rect, topleft = make_rectangle(topleft,bottomright,(0,0,0),(255,255,255),30)
+                        obj_rect, topleft = make_rectangle(topleft,bottomright,(0,0,0),(255,255,255), 50)
                         obj_rect_list.append((obj_rect, topleft))
 
                         topleft = tuple([int(i / resize_factor) for i in topleft])
@@ -223,6 +238,7 @@ def mainLoop(screen, px, origSize, image_name, resizefactor):
 
                         print 'Saved a person!', topleft, bottomright
                         topleft = bottomright = None
+                        selected_points = []
 
 
         #Draw the screen
@@ -236,7 +252,7 @@ def mainLoop(screen, px, origSize, image_name, resizefactor):
             new_bottomright = pygame.mouse.get_pos()
         if topleft:
             new_topleft, new_bottomright = fix_topleft_and_bottomright(topleft, new_bottomright, px.get_rect()[2:])
-            im, new_topleft = make_rectangle(new_topleft, new_bottomright, (0, 0, 0), (250, 250, 120), 60)
+            im, new_topleft = make_rectangle(new_topleft, new_bottomright, (0, 0, 0), (204, 0, 0), 60) #Utah crimson
             screen.blit(im, new_topleft)
             #print(topleft, bottomright)
 
@@ -252,20 +268,21 @@ def mainLoop(screen, px, origSize, image_name, resizefactor):
 
 if __name__ == "__main__":
 
-    path = os.path.join(os.path.dirname(os.path.abspath(__file__)), IMAGE_FOLDER)
+    path = IMAGE_PATH #os.path.join(os.path.dirname(os.path.abspath(__file__)), IMAGE_FOLDER)
 
     files = sorted(os.listdir(path))
 
     classify = False
 
-    #Finds the size of the monitor and adjusts the window accordingly.
-    width = gtk.gdk.screen_width()
-    height = gtk.gdk.screen_height()
-    window_size = (int(0.94 * width), int(0.94 * height))
+    #Finds the size of the monitor and gives the window a reasonable size.
+    rawsize = subprocess.Popen('xrandr | grep "\*" | cut -d" " -f4', shell = True, stdout = subprocess.PIPE).communicate()[0]
+    rawsize = rawsize[:-1].split("x")
+    window_size = (int(0.94 * int(rawsize[0])), int(0.94 * int(rawsize[1])))
 
     fileindex = 0
     movement = 1
-    while fileindex < len(files):
+    while True:
+        fileindex %= len(files)
         fileindex = max(0, fileindex)
         filename = files[fileindex]
 
@@ -278,7 +295,8 @@ if __name__ == "__main__":
                     print("No file called \"{}\"".format(IMAGE))
                 continue
 
-        if os.path.isdir(filename):
+        if os.path.isdir(os.path.join(path,filename)):
+            print(filename, "is a directory")
             fileindex += movement
             continue
 
@@ -294,7 +312,10 @@ if __name__ == "__main__":
         width = image_size[0]
         height = image_size[1]
         FOLDER = "JPEGImages"
-        create_xml(FOLDER, filename, width, height, 3, obj_list)
+        if obj_list:
+            create_xml(XML_PATH, FOLDER, filename, width, height, 3, obj_list)
+        else:
+            delete_xml(XML_PATH, filename)
 
         fileindex += movement
 

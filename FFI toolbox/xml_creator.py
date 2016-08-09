@@ -5,15 +5,15 @@ from ImageObject import ImageObject
 
 #####################################VARIABLES#########################################
 
-#Name of the folder containing the XML files
-XML_FOLDER = 'Annotations'
+#Name of the folder containing the XML files. This can be specified through arguments.
+#XML_FOLDER = 'Annotations'
 
 
 #######################################################################################
 
-def save_xml(doc, root, folder = XML_FOLDER):
+def save_xml(doc, root, path):
 
-    path = os.path.join(os.path.dirname(os.path.abspath(__file__)), folder)
+    #path = os.path.join(os.path.dirname(os.path.abspath(__file__)), folder) # Not used since this function started taking full paths
 
     if not os.path.exists(path):
         os.makedirs(path)
@@ -25,12 +25,14 @@ def save_xml(doc, root, folder = XML_FOLDER):
 
     print 'Saved', filename, 'successfully!'
 
-def read_xml(imagefilename, folder = XML_FOLDER):
-    path = os.path.join(os.path.dirname(os.path.abspath(__file__)), folder)
+def read_xml(imagefilename, path):
 
     image_name = imagefilename.split('.')[0] + '.xml'
 
-    tree = ET.parse(os.path.join(path, image_name))
+    try:
+        tree = ET.parse(os.path.join(path, image_name))
+    except IOError: #No xml file found
+        return None
     root = tree.getroot()
     objects = []
 
@@ -48,7 +50,7 @@ def read_xml(imagefilename, folder = XML_FOLDER):
     return objects
 
 
-def create_xml(folder_name, file_name, w, h, d, objects):
+def create_xml(path, folder_name, file_name, w, h, d, objects):
 
     root = Element('annotation')
     doc = ElementTree(root)
@@ -106,7 +108,7 @@ def create_xml(folder_name, file_name, w, h, d, objects):
         ymax = SubElement(bounds, 'ymax')
         ymax.text = str(elem.getYmax())
 
-    save_xml(doc, root)
+    save_xml(doc, root, path)
 
 
 
