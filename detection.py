@@ -28,26 +28,26 @@ import random
 ########################################VARIABLES#############################################
 
 #Confidence threshold: Increase this value to be more strict about which objects to show. Only objects with P(obj|box) > CONF_THRESH will be shown
-CONF_THRESH = 0.4
+CONF_THRESH = 0.8
 
 #Non-Maximum Suppression: Increase this value to allow more squares close to each other.
 NMS_THRESH = 0.09
 
 #Mappen med bildene som skal bli analysert. Can be overrided with --images.
-IMAGE_DIRECTORY = "/home/sommerstudent/fvr-py-FFI/data/demo"
+IMAGE_DIRECTORY = "/home/sommerstudent/testdata/2016-08-09"
 
 #Run with either "bbox_pred" or "bbox_pred_sgs"
 BOX_DELTAS_SGS = "bbox_pred"
 
 #The path to to caffemodel and prototxt that are to be used. These can be overrided with --caffemodel and --prototxt when running demo.py.
-CAFFEMODEL = '/home/sommerstudent/fvr-py-FFI/output/faster_rcnn_end2end/ffi_2016_10m_trainval/ffi2016_faster_rcnn_iter_100.caffemodel'
-PROTOTXT = '/home/sommerstudent/fvr-py-FFI/models/new_models/FFINett/faster_rcnn_end2end/test.prototxt'
+CAFFEMODEL = '/home/sommerstudent/fvr-py-FFI/output/faster_rcnn_end2end/ffi_trainval/ffi2016_faster_rcnn_iter_200.caffemodel'
+PROTOTXT = '/home/sommerstudent/fvr-py-FFI/models/FFINett/faster_rcnn_end2end/test.prototxt'
 
 #Name of the different classes
 #CLASSES = ('__background__', 'aeroplane', 'bicycle', 'bird', 'boat', 'bottle', 'bus', 'car', 'cat', 'chair', 'cow', 'diningtable', 'dog', 'horse', 'motorbike', 'person', 'pottedplant','sheep', 'sofa', 'train', 'tvmonitor')
 CLASSES = ('__background__', 'person')
 
-#Nets to choose from
+#Nets to choose from  #CURRENTLY NOT USED
 NETS = {'vgg16': ('VGG16',
                   'VGG16_faster_rcnn_final.caffemodel',
                   'VGG16.v2.caffemodel'),
@@ -58,9 +58,12 @@ NETS = {'vgg16': ('VGG16',
                  'FFINett01_faster_rcnn_final.caffemodel')
 	}
 
-color = random.randint(0, 9)
+COLOR = random.randint(0, 9)
+NET = caffe.Net(PROTOTXT, CAFFEMODEL, caffe.TEST)
+print '\n\nLoaded network {:s}'.format(CAFFEMODEL)
 
 def int_to_col(number):
+    """Convert an integer into one of several pre-defined colors."""
 
     switcher = {
         0: 'crimson',
@@ -75,67 +78,18 @@ def int_to_col(number):
         9: 'orange'
     }
 
-    #print number % len(switcher)
-    #return switcher.get(number % len(switcher), "red")
-    return switcher.get(color,"crimson")
-
-# Visualize detections for each class
-def vis_detections(class_name, cls_ind, dets, ax, thresh=0.5):
-    """Draw detected bounding boxes."""
-
-    color = random.randint(0, 9)
-
-    inds = np.where(dets[:, -1] >= thresh)[0]
-    if len(inds) == 0:
-        return
-
-    for i in inds:
-        bbox = dets[i, :4]
-        score = dets[i, -1]
-
-        ax.add_patch(
-            plt.Rectangle((bbox[0], bbox[1]),
-                          bbox[2] - bbox[0],
-                          bbox[3] - bbox[1], fill=False,
-                          edgecolor=int_to_col(color), linewidth=3.5, alpha=0.8)
-            )
-        ax.text(bbox[0] + 1, bbox[1] ,
-                '{:s} {:.3f}'.format(class_name, score),
-                bbox=dict(facecolor=int_to_col(cls_ind), alpha=0.6),
-                fontsize=14, color='snow')
+    return switcher.get(COLOR % len(switcher), "crimson")
 
 
-def detection(net, image_name, mappe=None):
-    """Detect object classes in an image using pre-computed object proposals."""
+def clean_detections(scores, boxes, thresh = CONF_THRESH):
+    """Clean up scores and boxes and return the interesting object in a handy format."""
 
-    if str(type(image_name)).split("'")[1] == "str": #If image_name is the path to an image
-        # Load the demo image
-        print(mappe,image_name)
-        im_file = os.path.join(mappe, image_name)
-        print(os.path.isfile(im_file))
-        print(im_file,"")
-        im = cv2.imread(im_file)
-        print(type(im))
-        print(1)
-    elif str(type(image_name)) == "numpy.ndarray": #If image_name is already a numpy image
-        im = image_name
-        print(2)
-    #else: something is wrong with image_name
+    for detection_index in range(len(scores)):
+        if scores[detection_index][0] > (1-CONF_THRESH):
+            continue
 
-
-    # Detect all object classes and regress object bounds
-    timer = Timer()
-    timer.tic()
-    scores, boxes = im_detect(net, im, None, BOX_DELTAS_SGS)
-    timer.toc()
-    print ('Detection took {:.3f}s for '
-           '{:d} object proposals').format(timer.total_time, boxes.shape[0])
-
-    fig, ax = plt.subplots(figsize=(12, 12))
-    im = im[:, :, (2, 1, 0)]
-    ax.imshow(im, aspect='equal')
-
-    for cls_ind, cls in enumerate(CLASSES[1:]):
+    for cls_ind, cls in enumerate(CLASSES[1:]): #There is propably a better way to do this.
+        #print cls_ind, cls
         cls_ind += 1 # because we skipped background
         cls_boxes = boxes[:, 4*cls_ind:4*(cls_ind + 1)]
         cls_scores = scores[:, cls_ind]
@@ -143,7 +97,68 @@ def detection(net, image_name, mappe=None):
                           cls_scores[:, np.newaxis])).astype(np.float32)
         keep = nms(dets, NMS_THRESH)
         dets = dets[keep, :]
-        vis_detections(cls, cls_ind, dets, ax, thresh=CONF_THRESH)
+
+        detections = []
+        inds = np.where(dets[:, -1] >= thresh)[0]
+        for i in inds:
+            bbox = dets[i, :4]
+            score = dets[i, -1]
+            detections.append(({"person":score}, tuple(bbox)))
+
+        return detections
+
+
+def get_im(image_file):
+    """Return a numpy image from a path. Return the input if it is already a numpy image."""
+
+    if str(type(image_file)).split("'")[1] == "numpy.ndarray":  # If image_file is already a numpy image
+        return image_file
+    elif type(image_file) == str:  # image_file is a string (hopefully the path to an image)
+        if not os.path.isfile(image_file):
+            print("Could not find the file:", image_file)
+            exit()
+        return cv2.imread(image_file) #Turns the image path into a numpy.ndarray
+    else:
+        print("Something is wrong with image_name:", type(image_file))
+        exit()
+
+
+def draw_result(im, detections, show=True):
+    """Draw detections on an image.
+
+    Keyword arguments:
+    show -- Whether to open the window and show the results immediately (or else it has to be shown manually later with plt.show()) (default True)
+    """
+
+    im = get_im(im)
+    fig, ax = plt.subplots(figsize=(12, 12))
+    im = im[:, :, (2, 1, 0)]
+    ax.imshow(im, aspect='equal')
+
+    color = random.randint(0, 9) #To get some pleasurable graphical variation
+
+    for finding in detections: #Iterate through the detected objects
+        class_name = ""
+        for key in finding[0]: #Find the class with the highest confidence and call it class_name
+            if class_name == "" or finding[0][key] > finding[0][class_name]:
+                class_name = key
+
+        score = finding[0][class_name]
+        xmin, ymin, xmax, ymax = finding[1]
+
+        #Draw rectangle with class name
+        ax.add_patch(
+            plt.Rectangle((xmin, ymin),
+                          xmax - xmin,
+                          ymax - ymin, fill=False,
+                          edgecolor=int_to_col(color), linewidth=3.5, alpha=0.8)
+        )
+        ax.text(xmin + 1, ymin,
+                '{:s} {:.3f}'.format(class_name, score),
+                bbox=dict(facecolor=int_to_col(color), alpha=0.6),
+                fontsize=14, color='snow')
+
+    #Draw window
     ax.set_title(('{} detection with '
               'p({} | box) >= {:.1f}').format('Object', 'obj',
                                               CONF_THRESH),
@@ -151,6 +166,27 @@ def detection(net, image_name, mappe=None):
     plt.axis('off')
     plt.tight_layout()
     plt.draw()
+    if show:
+        plt.show()
+
+
+def detection(net, image_name):
+    """Detect object classes in an image using pre-computed object proposals."""
+
+    im = get_im(image_name)
+    # Detect all object classes and regress object bounds
+    timer = Timer()
+    timer.tic()
+    try:
+        scores, boxes = im_detect(net, im, None, BOX_DELTAS_SGS)
+    except TypeError:
+        print("detection: You may be using an old version of lib/fast_rcnn/test.py. It has been changed in order to receive a fourth argument which is either \"bbox_pred\" or \"bbox_pred_sgs\". Quitting.")
+        exit()
+    timer.toc()
+    print ('im_detect took {:.3f} s for '
+           '{:d} object proposals').format(timer.total_time, boxes.shape[0])
+
+    return scores, boxes
 
 
 def parse_args():
@@ -161,7 +197,7 @@ def parse_args():
     parser.add_argument('--cpu', dest='cpu_mode',
                         help='Use CPU mode (overrides --gpu)',
                         action='store_true')
-    parser.add_argument('--net', dest='demo_net', help='Network to use [vgg16]',
+    parser.add_argument('--net', dest='demo_net', help='Network to use [vgg16]', #CURRENTLY NOT USED
                         choices=NETS.keys(), default='zf') # vgg16
     parser.add_argument('--caffemodel', dest='caffemodel', help='Path to the .caffemodel-file to use. Defaults to the CAFFEMODEL variable set in demo.py',
                         default=CAFFEMODEL)
@@ -177,60 +213,72 @@ def parse_args():
 
     return args
 
+def analyze_image(image, cpu=False, gpu_id=0, thresh=CONF_THRESH):
+    """Analyze an image and return a list of all interesting objects.
 
-def analyze_image(image, net=None):
-    if net == None:
-        net = caffe.Net(PROTOTXT, CAFFEMODEL, caffe.TEST)
-    detection(net, image)
-    return
+    Keyword arguments:
+        cpu -- Whether to use the CPU instead of the GPU (default False)
+        thresh -- The minimum detection confidence required to keep a detection (default CONF_THRESH (defined in detection.py))
+    """
 
-if __name__ == '__main__':
+    analyze_timer = Timer()
+    analyze_timer.tic()
 
-    #analyze_image('/home/sommerstudent/testdata/demo_test/000001.jpg')
-    #exit()
+    cfg.TEST.HAS_RPN = True  # Use RPN for proposals
+    if cpu:
+        print "Using CPU"
+        caffe.set_mode_cpu()
+    else:
+        caffe.set_mode_gpu()
+        caffe.set_device(gpu_id)
+        cfg.GPU_ID = gpu_id
+    im = get_im(image)
+    print("Detecting ...")
+    scores, boxes = detection(NET, im)
+    print("Detected.")
+
+    detections = clean_detections(scores, boxes, thresh)
+
+    analyze_timer.toc()
+    print "Total time usage for this image: {:.3f} s".format(analyze_timer.total_time)
+
+    return detections
+
+
+def main():
 
     cfg.TEST.HAS_RPN = True  # Use RPN for proposals
 
     args = parse_args()
     print(args)
 
-    # prototxt = os.path.join(cfg.ROOT_DIR, 'models', 'pascal_voc',  NETS[args.demo_net][0],
-    #                        'faster_rcnn_alt_opt', 'faster_rcnn_test.pt')
-
-    # caffemodel = os.path.join(cfg.DATA_DIR, 'imagenet_models', # 'faster_rcnn_models',
-    #                          NETS[args.demo_net][2])
-
-    if not os.path.isfile(args.caffemodel):
-        raise IOError(('No caffemodel file found at the path {:s}.\nDid you run ./data/script/'
-                       'fetch_faster_rcnn_models.sh?').format(args.caffemodel))
-
-    if args.cpu_mode:
-        caffe.set_mode_cpu()
-    else:
-        caffe.set_mode_gpu()
-        caffe.set_device(args.gpu_id)
-        cfg.GPU_ID = args.gpu_id
-    net = caffe.Net(args.prototxt, args.caffemodel, caffe.TEST)
-
-    print '\n\nLoaded network {:s}'.format(args.caffemodel)
-
-    # Warmup on a dummy image
-    im = 128 * np.ones((300, 500, 3), dtype=np.uint8)
-    for i in xrange(2):
-        try:
-            _, _= im_detect(net, im, None, BOX_DELTAS_SGS)
-        except TypeError:
-            print("demo.py: You are using an old version of lib/fast_rcnn/test.py. It has been changed in order to receive a fourth argument which is either \"bbox_pred\" or \"bbox_pred_sgs\".")
-            exit()
+    # Warmup on a dummy image   #Does this serve any purpose at all?
+    # im = 128 * np.ones((300, 500, 3), dtype=np.uint8)
+    # for i in xrange(2):
+    #     try:
+    #         _ = analyze_image(im, cpu=False)
+    #     except TypeError:
+    #         print("detection.py: You may be using an old version of lib/fast_rcnn/test.py. It has been changed in order to receive a fourth argument which is either \"bbox_pred\" or \"bbox_pred_sgs\".")
+    #         exit()
 
     im_names = os.listdir(args.image_directory)
     i = 0
-    for im_name in im_names:
+    for im_name in im_names: #Iterate through the files in the folder
+
         print '~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~'
-        print 'Demo for {}'.format(os.path.join(args.image_directory, im_name))
-        detection(net, im_name, args.image_directory)
+        file_name = os.path.join(args.image_directory, im_name)
+        if os.path.isdir(file_name):
+            continue
+        print 'Analyzing {}'.format(file_name)
+        #scores, boxes = detection(net, file_name)
+        detections = analyze_image(file_name, cpu=args.cpu_mode, gpu_id=args.gpu_id)
+        draw_result(file_name, detections, show=True)
+
         if i == args.image_count - 1:
             break
         i += 1
 
-    plt.show()
+    #plt.show()
+
+if __name__ == '__main__':
+    main()

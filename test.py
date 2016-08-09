@@ -172,7 +172,7 @@ def im_detect(net, im, boxes=None, box_deltas_SGS = "bbox_pred_sgs"):
 
     if cfg.TEST.BBOX_REG:
         # Apply bounding-box regression deltas
-        box_deltas = blobs_out[box_deltas_SGS] # bbox_pred
+        box_deltas = blobs_out['bbox_pred'] # bbox_pred
         pred_boxes = bbox_transform_inv(boxes, box_deltas)
         pred_boxes = clip_boxes(pred_boxes, im.shape)
     else:
