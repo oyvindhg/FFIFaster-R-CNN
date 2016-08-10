@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 import os
 import cv2
 
-image_directory = '/home/ogn/Dropbox/Images + XMLs/Images'
+image_directory = '/home/sommerstudent/testdata/2016-08-03'
 im_names = os.listdir(image_directory)
 
 #tstart = time.time()
