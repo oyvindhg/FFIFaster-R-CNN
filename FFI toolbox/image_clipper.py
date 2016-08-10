@@ -18,12 +18,12 @@ pygame.init()
 IMAGE_DEPTH = 3
 
 #Name of the folder of the images that are to be classified, and the xml files that are to be created
-IMAGE_PATH = '/home/mathias/Dropbox/Testbilder 2016-08-03'
-XML_PATH = '/home/mathias/Dropbox/Testbilder 2016-08-03/XML'
+IMAGE_PATH = '/home/mathias/Dropbox/Testbilder_2016-08-05'
+XML_PATH = '/home/mathias/Dropbox/Testbilder_2016-08-05/XML'
 
 #The image you want to start classifying from. Write 'all' to classify all
 #IMAGE = 'index.jpeg'
-IMAGE = 'all'
+IMAGE = 'left0078.jpg'
 
 #####################################################################################
 
