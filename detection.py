@@ -34,14 +34,14 @@ CONF_THRESH = 0.8
 NMS_THRESH = 0.09
 
 #Mappen med bildene som skal bli analysert. Can be overrided with --images.
-IMAGE_DIRECTORY = "/home/sommerstudent/testdata/2016-08-09"
+IMAGE_DIRECTORY = '/home/ogn/Dropbox/Testbilder 2016-06-29/10m/Med mennesker/Helges godtepose'
 
 #Run with either "bbox_pred" or "bbox_pred_sgs"
 BOX_DELTAS_SGS = "bbox_pred"
 
 #The path to to caffemodel and prototxt that are to be used. These can be overrided with --caffemodel and --prototxt when running demo.py.
-CAFFEMODEL = '/home/sommerstudent/fvr-py-FFI/output/faster_rcnn_end2end/ffi_trainval/ffi2016_faster_rcnn_iter_200.caffemodel'
-PROTOTXT = '/home/sommerstudent/fvr-py-FFI/models/FFINett/faster_rcnn_end2end/test.prototxt'
+CAFFEMODEL = '/home/ogn/Net/zf_faster_rcnn_iter_200.caffemodel'
+PROTOTXT = '/home/ogn/Net/test.prototxt'
 
 #Name of the different classes
 #CLASSES = ('__background__', 'aeroplane', 'bicycle', 'bird', 'boat', 'bottle', 'bus', 'car', 'cat', 'chair', 'cow', 'diningtable', 'dog', 'horse', 'motorbike', 'person', 'pottedplant','sheep', 'sofa', 'train', 'tvmonitor')
@@ -123,7 +123,7 @@ def get_im(image_file):
         exit()
 
 
-def draw_result(im, detections, show=True):
+def draw_result(im, detections, show=True, ax = None):
     """Draw detections on an image.
 
     Keyword arguments:
@@ -131,9 +131,10 @@ def draw_result(im, detections, show=True):
     """
 
     im = get_im(im)
-    fig, ax = plt.subplots(figsize=(12, 12))
     im = im[:, :, (2, 1, 0)]
-    ax.imshow(im, aspect='equal')
+    if ax == None:
+        fig, ax = plt.subplots(figsize=(12, 12))
+        ax.imshow(im, aspect='equal')
 
     color = random.randint(0, 9) #To get some pleasurable graphical variation
 
@@ -165,9 +166,15 @@ def draw_result(im, detections, show=True):
              fontsize=14)
     plt.axis('off')
     plt.tight_layout()
-    plt.draw()
-    if show:
-        plt.show()
+
+    if ax != None:
+        aximage = ax.imshow(im)
+        aximage.axes.figure.canvas.draw()
+        plt.pause(0.0001)
+    else:
+        plt.draw()
+        if show:
+            plt.show()
 
 
 def detection(net, image_name):
@@ -271,7 +278,7 @@ def main():
             continue
         print 'Analyzing {}'.format(file_name)
         #scores, boxes = detection(net, file_name)
-        detections = analyze_image(file_name, cpu=args.cpu_mode, gpu_id=args.gpu_id)
+        detections = analyze_image(file_name, cpu=True, gpu_id=0)
         draw_result(file_name, detections, show=True)
 
         if i == args.image_count - 1:
