@@ -34,14 +34,14 @@ CONF_THRESH = 0.8
 NMS_THRESH = 0.09
 
 #Mappen med bildene som skal bli analysert. Can be overrided with --images.
-IMAGE_DIRECTORY = '/home/ogn/Dropbox/Testbilder 2016-06-29/10m/Med mennesker/Helges godtepose'
+IMAGE_DIRECTORY = '/home/sommerstudent/testdata/2016-08-05'
 
 #Run with either "bbox_pred" or "bbox_pred_sgs"
 BOX_DELTAS_SGS = "bbox_pred"
 
 #The path to to caffemodel and prototxt that are to be used. These can be overrided with --caffemodel and --prototxt when running demo.py.
-CAFFEMODEL = '/home/ogn/Net/zf_faster_rcnn_iter_200.caffemodel'
-PROTOTXT = '/home/ogn/Net/test.prototxt'
+CAFFEMODEL = '/home/sommerstudent/fvr-py-FFI/output/faster_rcnn_end2end/ffi_trainval/ffi2016_faster_rcnn_iter_200.caffemodel'
+PROTOTXT = '/home/sommerstudent/fvr-py-FFI/models/FFINett/faster_rcnn_end2end/test.prototxt'
 
 #Name of the different classes
 #CLASSES = ('__background__', 'aeroplane', 'bicycle', 'bird', 'boat', 'bottle', 'bus', 'car', 'cat', 'chair', 'cow', 'diningtable', 'dog', 'horse', 'motorbike', 'person', 'pottedplant','sheep', 'sofa', 'train', 'tvmonitor')
@@ -61,6 +61,8 @@ NETS = {'vgg16': ('VGG16',
 COLOR = random.randint(0, 9)
 NET = caffe.Net(PROTOTXT, CAFFEMODEL, caffe.TEST)
 print '\n\nLoaded network {:s}'.format(CAFFEMODEL)
+
+fig, ax = plt.subplots(figsize=(12, 12))    #DRAWING: Initialize figure ready to be drawn to
 
 def int_to_col(number):
     """Convert an integer into one of several pre-defined colors."""
@@ -123,7 +125,7 @@ def get_im(image_file):
         exit()
 
 
-def draw_result(im, detections, show=True, ax = None):
+def draw_result(im, detections, show=True):#, ax = None):
     """Draw detections on an image.
 
     Keyword arguments:
@@ -132,9 +134,9 @@ def draw_result(im, detections, show=True, ax = None):
 
     im = get_im(im)
     im = im[:, :, (2, 1, 0)]
-    if ax == None:
-        fig, ax = plt.subplots(figsize=(12, 12))
-        ax.imshow(im, aspect='equal')
+    #if ax == None:
+        #fig, ax = plt.subplots(figsize=(12, 12))
+        #ax.imshow(im, aspect='equal')
 
     color = random.randint(0, 9) #To get some pleasurable graphical variation
 
@@ -168,13 +170,14 @@ def draw_result(im, detections, show=True, ax = None):
     plt.tight_layout()
 
     if ax != None:
-        aximage = ax.imshow(im)
-        aximage.axes.figure.canvas.draw()
+        #aximage = ax.imshow(im)
+        ax.imshow(im)
+        #aximage.axes.figure.canvas.draw()
         plt.pause(0.0001)
-    else:
-        plt.draw()
-        if show:
-            plt.show()
+    # else:
+    #     plt.draw()
+    #     if show:
+    #         plt.show()
 
 
 def detection(net, image_name):
@@ -268,22 +271,33 @@ def main():
     #         print("detection.py: You may be using an old version of lib/fast_rcnn/test.py. It has been changed in order to receive a fourth argument which is either \"bbox_pred\" or \"bbox_pred_sgs\".")
     #         exit()
 
+
+    print "plt.subplots"
+    #fig, ax = plt.subplots(figsize=(12, 12))    #DRAWING: Initialize figure ready to be drawn to
+
+    print "os.listdir"
     im_names = os.listdir(args.image_directory)
-    i = 0
-    for im_name in im_names: #Iterate through the files in the folder
+    print "sort"
+    im_names.sort()
+    print "sortert"
+    while True:
+        i = 0
+        for im_name in im_names: #Iterate through the files in the folder
+            print '~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~'
 
-        print '~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~'
-        file_name = os.path.join(args.image_directory, im_name)
-        if os.path.isdir(file_name):
-            continue
-        print 'Analyzing {}'.format(file_name)
-        #scores, boxes = detection(net, file_name)
-        detections = analyze_image(file_name, cpu=True, gpu_id=0)
-        draw_result(file_name, detections, show=True)
+            ax.cla()    #DRAWING: Remove any previous drawings from the figure
 
-        if i == args.image_count - 1:
-            break
-        i += 1
+            file_name = os.path.join(args.image_directory, im_name)
+            if os.path.isdir(file_name):
+                continue
+            print 'Analyzing {}'.format(file_name)
+
+            detections = analyze_image(file_name, cpu=False, gpu_id=0)
+            draw_result(file_name, detections, show=True)#, ax=ax)   #DRAWING: Gives ax as an argument to allow it to be drawn to by draw_result)
+
+            if i == args.image_count - 1:
+                break
+            i += 1
 
     #plt.show()
 
