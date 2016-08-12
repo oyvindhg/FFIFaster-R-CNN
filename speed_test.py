@@ -1,3 +1,6 @@
+#!/usr/bin/python
+# -*- coding: utf-8 -*-
+
 import time
 import numpy
 import matplotlib.pyplot as plt
