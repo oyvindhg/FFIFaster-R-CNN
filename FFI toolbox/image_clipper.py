@@ -28,8 +28,8 @@ IMAGE = 'left0078.jpg'
 #####################################################################################
 
 def fix_topleft_and_bottomright(topleft,bottomright,pictureSize):
-    """Makes sure that topleft and bottomright are valid.
-    Returns a valid topleft, bottomright."""
+    """Make sure that topleft and bottomright are valid.
+    Return a valid topleft, bottomright."""
 
     #Makes sure that topleft is at the top left and bottomright is at the bottom right
     tlx, tly = topleft
@@ -45,6 +45,8 @@ def fix_topleft_and_bottomright(topleft,bottomright,pictureSize):
     return topleft, bottomright
 
 def read_old_xml(imagefilename, resizefactor):
+    """Look for an existing annotation file and retrieves objects from it."""
+
     image_name = "".join(imagefilename.split(".")[:-1])
     objectlist = xml_creator.read_xml(image_name, XML_PATH)
 
@@ -69,6 +71,8 @@ def read_old_xml(imagefilename, resizefactor):
 
 
 def delete_xml(path, filename):
+    """Deletes the existing annotation file if one exists."""
+
     full_path = os.path.join( path, filename.split('.')[0] + '.xml' )
     try:
         os.remove(full_path)
@@ -77,6 +81,8 @@ def delete_xml(path, filename):
 
 
 def selection_from_points(list_of_points):
+    """Create the smallest possible rectangle that contains all the provided points."""
+
     x_values = []
     y_values = []
     for point in list_of_points:
@@ -87,15 +93,16 @@ def selection_from_points(list_of_points):
     bottomright = (max(x_values), max(y_values))
     return topleft, bottomright
 
-#Find the highest possible resize factor for images to be contained within the window
 def calculate_resize_factor(image_size, container_size):
+    """Find the highest possible resize factor for images to be contained within the window"""
+
     xFactor = container_size[0] / float(image_size[0])
     yFactor = container_size[1] / float(image_size[1])
     return min(xFactor, yFactor)
 
 
 def make_rectangle(topleft, bottomright, edge_color, fill_color, alpha=255):
-    """Returns a surface and a position. Takes a topleft, bottomright, edge color and fill color as tuples of RGB values and an alpha value."""
+    """Return a surface and a position. Take a topleft, bottomright, edge color and fill color as tuples of RGB values and an alpha value."""
 
     topleft, bottomright = fix_topleft_and_bottomright(topleft,bottomright,None)
 
@@ -140,6 +147,7 @@ def move(screen, location, command):
     return (location[0], location[1])
 
 def create_object(name, topleft, bottomright):
+    """Create an object object from a name, topleft and bottomright."""
 
     left = min(topleft[0], bottomright[0])
     right = max(topleft[0], bottomright[0])
@@ -150,6 +158,8 @@ def create_object(name, topleft, bottomright):
 
 
 def mainLoop(screen, px, origSize, image_name, resizefactor):
+    """Repeatedly draw the image."""
+
     grid_on = False
     topleft = bottomright = None
     esc = 0
@@ -276,7 +286,13 @@ if __name__ == "__main__":
 
     #Finds the size of the monitor and gives the window a reasonable size.
     rawsize = subprocess.Popen('xrandr | grep "\*" | cut -d" " -f4', shell = True, stdout = subprocess.PIPE).communicate()[0]
-    rawsize = rawsize[:-1].split("x")
+    print(rawsize)
+
+    monitors = rawsize.split("\n")[:-1]
+    if len(monitors) > 1:
+        print("Found several monitors: {}. Using the resolution of the first monitor in the list.".format(monitors))
+    rawsize = monitors[0]
+    rawsize = rawsize.split("x")
     window_size = (int(0.94 * int(rawsize[0])), int(0.94 * int(rawsize[1])))
 
     fileindex = 0
